@@ -1,5 +1,21 @@
 #!/bin/bash
 #######################################################################################
+#
+# Copyright (C) 2020 steadfasterX <steadfasterX@binbash.rocks>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################################
 
 # Static environment variables
 #################################
@@ -19,7 +35,6 @@ ZIP_DIR="$EOS_ZIP_DIR"
 : "${ZIP_DIR:=${SRC_DIR}/zips}"
 
 export LMANIFEST_DIR=./.repo/local_manifests
-export DELTA_DIR=${SRC_DIR}/delta
 export LOGS_DIR=${SRC_DIR}/logs
 export USERSCRIPTS_DIR=${SRC_DIR}/userscripts
 export DEBIAN_FRONTEND=noninteractive
@@ -30,10 +45,10 @@ export BUILDSCRIPTSREPO="https://gitlab.e.foundation/steadfasterX/android_vendor
 # EXPORTS_VALS) egrep '^\w+="\$' vendor/e/vendorsetup.sh |cut -d = -f2 | tr -d '"' |tr -d '$' |tr "\n" ' '
 
 # internal variables which are used in all internal scripts
-EXPORTS_KEYS="USE_CCACHE CCACHE_DIR CCACHE_SIZE BRANCH_NAME RELEASE_TYPE REPO MIRROR OTA_URL USER_NAME USER_MAIL INCLUDE_PROPRIETARY BUILD_OVERLAY LOCAL_MIRROR CRONTAB_TIME CLEAN_AFTER_BUILD CLEAN_BEFORE_BUILD WITH_SU ANDROID_JACK_VM_ARGS CUSTOM_PACKAGES SIGN_BUILDS KEYS_SUBJECT KEYS_SUBJECT ZIP_SUBDIR LOGS_SUBDIR SIGNATURE_SPOOFING BUILD_DELTA DELETE_OLD_ZIPS DELETE_OLD_DELTAS DELETE_OLD_LOGS OPENDELTA_BUILDS_JSON EOS_BUILD_DATE TMP_DIR ZIP_DIR SYNC_RESET KEYS_DIR"
+EXPORTS_KEYS="USE_CCACHE CCACHE_DIR CCACHE_SIZE BRANCH_NAME RELEASE_TYPE REPO MIRROR OTA_URL USER_NAME USER_MAIL INCLUDE_PROPRIETARY BUILD_OVERLAY LOCAL_MIRROR CRONTAB_TIME CLEAN_AFTER_BUILD CLEAN_BEFORE_BUILD WITH_SU ANDROID_JACK_VM_ARGS CUSTOM_PACKAGES SIGN_BUILDS KEYS_SUBJECT KEYS_SUBJECT ZIP_SUBDIR LOGS_SUBDIR SIGNATURE_SPOOFING DELETE_OLD_ZIPS DELETE_DELETE_OLD_LOGS EOS_BUILD_DATE TMP_DIR ZIP_DIR SYNC_RESET KEYS_DIR MINIMAL_APPS"
 
 # user configurable variables usually set in vendorsetup.sh or exported in the current environment
-EXPORTS_VALS="EOS_TMP_DIR EOS_ZIP_DIR EOS_USE_CCACHE EOS_CCACHE_DIR EOS_CCACHE_SIZE EOS_BRANCH_NAME EOS_RELEASE_TYPE EOS_REPO EOS_MIRROR EOS_OTA_URL EOS_INCLUDE_PROPRIETARY EOS_BUILD_OVERLAY EOS_LOCAL_MIRROR EOS_CLEAN_ZIPDIR EOS_CRONTAB_TIME EOS_CLEAN_AFTER_BUILD EOS_CLEAN_BEFORE_BUILD EOS_WITH_SU EOS_ANDROID_JACK_VM_ARGS EOS_CUSTOM_PACKAGES EOS_SIGN_BUILDS EOS_KEYS_SUBJECT EOS_ZIP_SUBDIR EOS_LOGS_SUBDIR EOS_SIGNATURE_SPOOFING EOS_BUILD_DELTA EOS_DELETE_OLD_ZIPS EOS_DELETE_OLD_DELTAS EOS_DELETE_OLD_LOGS OPENDELTA_BUILDS_JSON EOS_SYNC_RESET"
+EXPORTS_VALS="EOS_TMP_DIR EOS_ZIP_DIR EOS_USE_CCACHE EOS_CCACHE_DIR EOS_CCACHE_SIZE EOS_BRANCH_NAME EOS_RELEASE_TYPE EOS_REPO EOS_MIRROR EOS_OTA_URL EOS_INCLUDE_PROPRIETARY EOS_BUILD_OVERLAY EOS_LOCAL_MIRROR EOS_CLEAN_ZIPDIR EOS_CRONTAB_TIME EOS_CLEAN_AFTER_BUILD EOS_CLEAN_BEFORE_BUILD EOS_WITH_SU EOS_ANDROID_JACK_VM_ARGS EOS_CUSTOM_PACKAGES EOS_SIGN_BUILDS EOS_KEYS_SUBJECT EOS_ZIP_SUBDIR EOS_LOGS_SUBDIR EOS_SIGNATURE_SPOOFING EOS_DELETE_OLD_ZIPS EOS_DELETE_OLD_LOGS EOS_SYNC_RESET EOS_MINI_APPS"
 
 # merge all exports
 EXPORTS="$EXPORTS_KEYS $EXPORTS_VALS"
@@ -241,38 +256,17 @@ SIGNATURE_SPOOFING="$EOS_SIGNATURE_SPOOFING"
 # if not defined in the device vendorsetup.sh the following will be used instead:
 : "${SIGNATURE_SPOOFING:=restricted}"
 
-# Generate delta files
-# define EOS_BUILD_DELTA in your device/<vendor>/<codename>/vendorsetup.sh.
-BUILD_DELTA="$EOS_BUILD_DELTA"
-# if not defined in the device vendorsetup.sh the following will be used instead:
-: "${BUILD_DELTA:=false}"
-
 # Delete old zips in $ZIP_DIR, keep only the N latest one (0 to disable)
 # define EOS_DELETE_OLD_ZIPS in your device/<vendor>/<codename>/vendorsetup.sh.
 DELETE_OLD_ZIPS="$EOS_DELETE_OLD_ZIPS"
 # if not defined in the device vendorsetup.sh the following will be used instead:
 : "${DELETE_OLD_ZIPS:=0}"
 
-# Delete old deltas in $DELTA_DIR, keep only the N latest one (0 to disable)
-# define EOS_DELETE_OLD_DELTAS in your device/<vendor>/<codename>/vendorsetup.sh.
-DELETE_OLD_DELTAS="$EOS_DELETE_OLD_DELTAS"
-# if not defined in the device vendorsetup.sh the following will be used instead:
-: "${DELETE_OLD_DELTAS:=0}"
-
 # Delete old logs in $LOGS_DIR, keep only the N latest one (0 to disable)
 # define EOS_DELETE_OLD_LOGS in your device/<vendor>/<codename>/vendorsetup.sh.
 DELETE_OLD_LOGS="$EOS_DELETE_OLD_LOGS"
 # if not defined in the device vendorsetup.sh the following will be used instead:
 : "${DELETE_OLD_LOGS:=0}"
-
-# Create a JSON file that indexes the build zips at the end of the build process
-# (for the updates in OpenDelta). The file will be created in $ZIP_DIR with the
-# specified name; leave empty to skip it.
-# Requires ZIP_SUBDIR.
-# define EOS_OPENDELTA_BUILDS_JSON in your device/<vendor>/<codename>/vendorsetup.sh.
-OPENDELTA_BUILDS_JSON="$OPENDELTA_BUILDS_JSON"
-# if not defined in the device vendorsetup.sh the following will be used instead:
-: "${OPENDELTA_BUILDS_JSON:=undefined}"
 
 # set the build date
 EOS_BUILD_DATE=$(date +%Y%m%d)
@@ -282,6 +276,19 @@ EOS_BUILD_DATE=$(date +%Y%m%d)
 # 0 means no sync/reset, 1 means everything will be hard reset and synced
 SYNC_RESET="$EOS_SYNC_RESET"
 : "${SYNC_RESET:=0}"
+
+# Save recovery image
+# define EOS_SAVE_RECOVERY in your device/<vendor>/<codename>/vendorsetup.sh.
+RECOVERY_IMG="$EOS_SAVE_RECOVERY"
+# if not defined in the device vendorsetup.sh the following will be used instead:
+: "${RECOVERY_IMG=:=false}"
+
+# Ship with Minimal Apps
+# define EOS_MINI_APPS in your device/<vendor>/<codename>/vendorsetup.sh.
+MINIMAL_APPS="$EOS_MINI_APPS"
+# if not defined in the device vendorsetup.sh the following will be used by default:
+: "${MINIMAL_APPS:=false}"
+
 
 #############################################################################################
 # END OF USER VARS
@@ -298,9 +305,8 @@ mkdir -p $SRC_DIR
 mkdir -p $ROOT_DIR
 mkdir -p $TMP_DIR
 mkdir -p $TMP
-[ "$USE_CCACHE" == "1" ] && mkdir -p $CCACHE_DIR
+[ "$USE_CCACHE" == "1" ] && mkdir -p $CCACHE_DIR  && export CCACHE_EXEC=/usr/bin/ccache
 mkdir -p $LMANIFEST_DIR
-mkdir -p $DELTA_DIR
 [ ${SIGN_BUILDS} == "true" ] && mkdir -p $KEYS_DIR
 mkdir -p $USERSCRIPTS_DIR
 
@@ -318,27 +324,6 @@ mkdir -p $LOGS_DIR
 ############################
 [ ! -z "$ROOT_DIR" ] && [ -d "$ROOT_DIR" ] && [ "$ROOT_DIR" != "/" ] && rm -rf ${ROOT_DIR}/*
 cp -rf ${VENDOR_DIR}/src/* ${ROOT_DIR}/
-
-# Download and build delta tools
-################################
-if [ "$BUILD_DELTA" == "true" ];then
-    cd $ROOT_DIR && \
-        mkdir delta && \
-        echo "cloning"
-        git clone --depth=1 https://gitlab.e.foundation/e/os/android_packages_apps_OpenDelta.git OpenDelta && \
-        gcc -o delta/zipadjust OpenDelta/jni/zipadjust.c OpenDelta/jni/zipadjust_run.c -lz && \
-        cp OpenDelta/server/minsignapk.jar OpenDelta/server/opendelta.sh delta/ && \
-        chmod +x delta/opendelta.sh && \
-        rm -rf OpenDelta/ && \
-        sed -i -e "s|^\s*HOME=.*|HOME=$ROOT_DIR|; \
-                   s|^\s*BIN_XDELTA=.*|BIN_XDELTA=xdelta3|; \
-                   s|^\s*FILE_MATCH=.*|FILE_MATCH=lineage-\*.zip|; \
-                   s|^\s*PATH_CURRENT=.*|PATH_CURRENT=$ANDROIDTOP/out/target/product/$DEVICE|; \
-                   s|^\s*PATH_LAST=.*|PATH_LAST=$SRC_DIR/delta_last/$DEVICE|; \
-                   s|^\s*KEY_X509=.*|KEY_X509=$KEYS_DIR/releasekey.x509.pem|; \
-                   s|^\s*KEY_PK8=.*|KEY_PK8=$KEYS_DIR/releasekey.pk8|; \
-                   s|publish|$DELTA_DIR|g" $ROOT_DIR/delta/opendelta.sh
-fi
 
 # export all environment variables
 ##################################
@@ -366,8 +351,8 @@ echo -e   '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
 echo ">> [$(date)] Determining correct OpenJDK version for $BRANCH_NAME"
 
 case $BRANCH_NAME in
-    *-pie)	JAVABASE="$ANDROIDTOP/prebuilts/jdk/jdk9/linux-x86" ;;	# prebuilt
-    *-oreo) 	NEEDEDJAVA=java-8-openjdk-amd64 ; JAVABASE=/usr/lib/jvm/$NEEDEDJAVA ;;
+    *-pie)	JAVABASE="$ANDROIDTOP/prebuilts/jdk/jdk9/linux-x86" ; NEEDEDJAVA=shipped ;;
+    *-oreo) 	NEEDEDJAVA=java-1.8.0-openjdk-amd64 ; JAVABASE=/usr/lib/jvm/$NEEDEDJAVA ;;
     *-nougat)	NEEDEDJAVA=java-7-oracle; JAVABASE=/usr/lib/jvm/$NEEDEDJAVA;;
     *)
 	echo "WARNING: cannot determine best java version for $BRANCH_NAME!"
@@ -376,26 +361,31 @@ esac
 JAVACBIN=$JAVABASE/bin/javac
 
 echo "... checking if we need to switch Java version"
-CURRENTJ=$(java -version 2>&1|grep version)
-NEWJBIN=$($JAVABASE/bin/java -version 2>&1|grep version)
-if [ "x$CURRENTJ" == "x$NEWJBIN" ];then
-	echo "... skipping java switch because we already have the wanted version ($CURRENTJ == $NEWJBIN)"
+if [ "$NEEDEDJAVA" == "shipped" ];then
+    echo "... skipping touching java as we use a shipped one ($JAVABASE)"
 else
+    CURRENTJ=$(java -version 2>&1|grep version)
+    NEWJBIN=$($JAVABASE/bin/java -version 2>&1|grep version)
+    if [ "x$CURRENTJ" == "x$NEWJBIN" ];then
+	echo "... skipping java switch because we already have the wanted version ($CURRENTJ == $NEWJBIN)"
+    else
 	echo "($CURRENTJ vs. $NEWJBIN)"
 	echo "... switching to $NEEDEDJAVA..."
-	sudo update-java-alternatives -v -s $NEEDEDJAVA
-fi
+	sudo update-java-alternatives -v -s $NEEDEDJAVA --jre-headless
+	echo -e "IF THE ABOVE FAILS, CHECK YOUR 'PATH' VARIABLE. PATH is currently set to:\n$PATH"
+    fi
 
-CURRENTC=$(javac -version 2>&1)
-NEWJCBIN=$($JAVACBIN -version 2>&1)
-if [ "x$CURRENTC" == "x$NEWJCBIN" ];then
+    CURRENTC=$(javac -version 2>&1)
+    NEWJCBIN=$($JAVACBIN -version 2>&1)
+    if [ "x$CURRENTC" == "x$NEWJCBIN" ];then
 	echo "... skipping javaC switch because we already have the wanted version ($CURRENTC == $NEWJCBIN)"
-else
+    else
 	echo "($CURRENTC vs. $NEWJCBIN)"
 	echo "... switching to $JAVACBIN..."
 	sudo update-alternatives --set javac $JAVACBIN
+    fi
 fi
-echo ">> [$(date)] Using OpenJDK $NEEDEDJAVA"
+echo ">> [$(date)] Using Java JDK $JAVABASE"
 
 
 # clean when requested
@@ -424,6 +414,38 @@ fi
 
 $VENDOR_DIR/init.sh
 
+
+# set global version vars
+##################################
+
+vendor=lineage
+case "$BRANCH_NAME" in
+  *nougat*)
+    vendor="cm"
+    themuppets_branch="cm-14.1"
+    android_version="7.1.2"
+    ;;
+  *oreo*)
+    themuppets_branch="lineage-15.1"
+    android_version="8.1"
+    ;;
+  *pie*)
+    themuppets_branch="lineage-16.0"
+    android_version="9"
+    ;;
+  *q*)
+    themuppets_branch="lineage-17.1"
+    android_version="10"
+    ;;
+  *)
+    echo ">> [$(date)] Building branch $branch is not (yet/anymore) suppported"
+    exit 1
+    ;;
+esac
+
+android_version_major=$(cut -d '.' -f 1 <<< $android_version)
+
+export android_version_major android_version themuppets_branch vendor
 
 # sync/reset when requested
 ##################################
