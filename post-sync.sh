@@ -36,7 +36,7 @@ echo -e   '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
 
     if [ "$SIGN_BUILDS" = true ]; then
       echo ">> [$(date)] Adding keys path ($KEYS_DIR)"
-      if [ ! -L user-keys ];then
+      if [ ! -L user-keys ]&&[ -d "user-keys" ];then
 	echo "WARNING: KEYS_DIR main path 'user-keys' is a directory - we expected a LINK instead!"
       else
 	# WARNING: we have to ensure that a link has been removed before.
@@ -49,7 +49,7 @@ echo -e   '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
       [ $? -ne 0 ] && sed -i "1s;^;PRODUCT_DEFAULT_DEV_CERTIFICATE := user-keys/releasekey\n;" vendor/$vendor/config/common.mk
       grep -q "PRODUCT_OTA_PUBLIC_KEYS := user-keys/releasekey" vendor/$vendor/config/common.mk
       [ $? -ne 0 ] && sed -i "1s;^;PRODUCT_OTA_PUBLIC_KEYS := user-keys/releasekey\n;" vendor/$vendor/config/common.mk
-      if [ "$android_version_major" -ge "10" ]; then
+      if [ "$android_version_major" -lt "10" ]; then
         grep -q "PRODUCT_EXTRA_RECOVERY_KEYS := user-keys/releasekey" vendor/$vendor/config/common.mk
         [ $? -ne 0 ] && sed -i "1s;^;PRODUCT_EXTRA_RECOVERY_KEYS := user-keys/releasekey\n;" vendor/$vendor/config/common.mk
       fi
