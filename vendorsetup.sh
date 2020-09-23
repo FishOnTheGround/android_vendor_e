@@ -149,9 +149,9 @@ if [ -z "$USER_NAME" ]||[ -z "$USER_MAIL" ];then echo "ERROR: Please set EOS_GIT
 
 # set build username
 # define EOS_BUILD_USER in your device/<vendor>/<codename>/vendorsetup.sh.
-BUILD_USERNAME="$EOS_BUILD_USER"
+USER="$EOS_BUILD_USER"
 # if not defined in the device vendorsetup.sh the following will be used instead:
-: "${BUILD_USERNAME:=$USER_NAME}"
+: "${USER:=$USER_NAME}"
 
 # Include proprietary files, downloaded automatically from github.com/TheMuppets/
 # Only some branches are supported
